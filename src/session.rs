@@ -66,7 +66,7 @@ impl<H: SessionHooks> Session<H> {
             "redo" => self.dispatch_redo(),
             "status" => self.dispatch_status(),
             "close" => self.dispatch_close(),
-            _ => format!("unknown session action {:?}", cmd),
+            _ => format!("unknown session action {cmd:?}"),
         }
     }
 
@@ -96,9 +96,9 @@ impl<H: SessionHooks> Session<H> {
                     .filter(|t| !t.is_empty())
                     .cloned()
                     .unwrap_or_else(|| "Untitled".to_string());
-                format!("new {:?} created", title)
+                format!("new {title:?} created")
             }
-            Err(e) => format!("error: {}", e),
+            Err(e) => format!("error: {e}"),
         }
     }
 
@@ -112,16 +112,15 @@ impl<H: SessionHooks> Session<H> {
                 self.model = Some(model);
                 self.log = EventLog::new();
                 self.file_path = path.clone();
-                format!("opened {:?}", path)
+                format!("opened {path:?}")
             }
-            Err(e) => format!("error: {}", e),
+            Err(e) => format!("error: {e}"),
         }
     }
 
     fn dispatch_save(&mut self, tokens: &[String]) -> String {
-        let model = match self.model.as_ref() {
-            Some(m) => m,
-            None => return "error: no model to save".to_string(),
+        let Some(model) = self.model.as_ref() else {
+            return "error: no model to save".to_string();
         };
 
         let mut save_path = self.file_path.clone();
@@ -139,9 +138,9 @@ impl<H: SessionHooks> Session<H> {
         match self.hooks.on_save(model, &save_path) {
             Ok(()) => {
                 self.file_path = save_path.clone();
-                format!("saved {:?}", save_path)
+                format!("saved {save_path:?}")
             }
-            Err(e) => format!("error: {}", e),
+            Err(e) => format!("error: {e}"),
         }
     }
 
@@ -151,7 +150,7 @@ impl<H: SessionHooks> Session<H> {
         }
         let name = &tokens[1];
         self.log.checkpoint(name);
-        format!("checkpoint {:?} created", name)
+        format!("checkpoint {name:?} created")
     }
 
     fn dispatch_undo(&mut self, tokens: &[String]) -> String {
@@ -160,31 +159,25 @@ impl<H: SessionHooks> Session<H> {
         }
 
         // undo to:NAME
-        if tokens.len() >= 2 {
-            let t = &tokens[1];
-            if t.len() > 3 && &t[..3] == "to:" {
-                let name = &t[3..];
-                if name.is_empty() {
-                    return "undo to: requires a checkpoint name".to_string();
+        if let Some(name) = tokens.get(1).and_then(|t| t.strip_prefix("to:")) {
+            if name.is_empty() {
+                return "undo to: requires a checkpoint name".to_string();
+            }
+            match self.log.undo_to(name) {
+                Ok(events) => {
+                    let count = events.len();
+                    let model = self.model.as_mut().unwrap();
+                    for ev in &events {
+                        self.hooks.reverse(ev, model);
+                    }
+                    self.hooks.on_rebuild_indices(model);
+                    return format!(
+                        "undone {count} event{} to checkpoint {name:?}",
+                        plural(count),
+                    );
                 }
-                match self.log.undo_to(name) {
-                    Ok(events) => {
-                        let count = events.len();
-                        let model = self.model.as_mut().unwrap();
-                        for ev in &events {
-                            self.hooks.reverse(ev, model);
-                        }
-                        self.hooks.on_rebuild_indices(model);
-                        return format!(
-                            "undone {} event{} to checkpoint {:?}",
-                            count,
-                            plural(count),
-                            name
-                        );
-                    }
-                    Err(_) => {
-                        return format!("cannot undo to {:?}", name);
-                    }
+                Err(_) => {
+                    return format!("cannot undo to {name:?}");
                 }
             }
         }
@@ -199,7 +192,7 @@ impl<H: SessionHooks> Session<H> {
             self.hooks.reverse(ev, model);
         }
         self.hooks.on_rebuild_indices(model);
-        format!("undone {} event{}", count, plural(count))
+        format!("undone {count} event{}", plural(count))
     }
 
     fn dispatch_redo(&mut self) -> String {
@@ -216,7 +209,7 @@ impl<H: SessionHooks> Session<H> {
             self.hooks.replay(ev, model);
         }
         self.hooks.on_rebuild_indices(model);
-        format!("redone {} event{}", count, plural(count))
+        format!("redone {count} event{}", plural(count))
     }
 
     fn dispatch_status(&self) -> String {

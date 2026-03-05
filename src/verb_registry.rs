@@ -72,16 +72,19 @@ impl VerbRegistry {
         let mut lines: Vec<String> = Vec::new();
 
         for cat in &self.categories {
-            lines.push(format!("{}:", cat.name.to_uppercase()));
+            let name = cat.name.to_uppercase();
+            lines.push(format!("{name}:"));
             for spec in &cat.specs {
-                lines.push(format!("  {}", spec.syntax));
+                let syntax = &spec.syntax;
+                lines.push(format!("  {syntax}"));
             }
             lines.push(String::new());
         }
 
         if let Some(sections) = extra_sections {
             for (title, content) in sections {
-                lines.push(format!("{}:", title.to_uppercase()));
+                let heading = title.to_uppercase();
+                lines.push(format!("{heading}:"));
                 lines.push(content.clone());
                 lines.push(String::new());
             }
