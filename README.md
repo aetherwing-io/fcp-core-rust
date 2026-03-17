@@ -1,12 +1,12 @@
 # fcp-core-rust
 
-Shared Rust framework for building [FCP](https://github.com/aetherwing-io/fcp) (File Context Protocol) servers.
+Shared Rust framework for building [FCP](https://github.com/os-tack/fcp) (File Context Protocol) servers.
 
 ## What It Provides
 
-fcp-core-rust extracts the common infrastructure that every FCP server needs — tokenizer, operation parser, verb registry, event log, session lifecycle, and response formatter — into a standalone library crate. FCP servers like [fcp-rust](https://github.com/aetherwing-io/fcp-rust) and [fcp-regex](https://github.com/aetherwing-io/fcp-regex) depend on it.
+fcp-core-rust extracts the common infrastructure that every FCP server needs — tokenizer, operation parser, verb registry, event log, session lifecycle, and response formatter — into a standalone library crate. FCP servers like [fcp-rust](https://github.com/os-tack/fcp-rust) and [fcp-regex](https://github.com/os-tack/fcp-regex) depend on it.
 
-This is the Rust equivalent of the [fcp-core](https://github.com/aetherwing-io/fcp-core) TypeScript/Python package.
+This is the Rust equivalent of the [fcp-core](https://github.com/os-tack/fcp-core) TypeScript/Python package.
 
 ## Modules
 
@@ -25,7 +25,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-fcp-core = { git = "https://github.com/aetherwing-io/fcp-core-rust" }
+fcp-core = { git = "https://github.com/os-tack/fcp-core-rust" }
 ```
 
 ### Parsing Operations
